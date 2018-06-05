@@ -2,6 +2,7 @@ from gensim.summarization.summarizer import summarize
 from nltk.corpus import stopwords
 from nltk.tokenize import RegexpTokenizer
 from nltk.translate.bleu_score import sentence_bleu
+from rouge import Rouge
 
 
 with open('./document.txt', "r") as f:
@@ -19,4 +20,10 @@ candidate = filtered_words
 print(filtered_words)
 score = sentence_bleu(reference, candidate)
 
-print(score)
+#ROUGE-1 refers to the overlap of 1-gram (each word) between the system and reference summaries.
+#ROUGE-2 refers to the overlap of bigrams between the system and reference summaries.
+
+rouge = Rouge()
+scores = rouge.get_scores(' '.join(candidate), ' '.join(reference[0]), avg=True)
+print("BLEU score: ", score)
+print( "Rouge scores: ", scores)

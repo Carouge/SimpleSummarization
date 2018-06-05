@@ -1,0 +1,156 @@
+Abstract
+Generative adversarial networks (GAN) have shown a lot
+of success in image generation. However until recent years
+they were considered inapplicable to the discrete problems
+of natural language processing (NLP). The latest papers in-
+troduce novel approaches to overcoming these issues by
+combining GANs with reinforcement learning models and
+lay the foundation for the whole new field of research of
+adversarial language processing.
+In our research we will apply GANs to the task of scientific
+text summarization. We will take the whole text of a paper
+and produce a shorter text that contains a concise summary
+of the research. Sophisticated structure of scientific texts
+and the availability of many additional sources of contextual
+information (such as the referenced papers and the topics
+of other papers written by the authors). We will compare
+the performance of several discrete GANs that performed
+well on the similar problems of text generation, and try to
+improve the results of recent state-of-the-art approaches to
+scientific text summarization.
+Keywords text summarization, NLP, GAN, reinforcement
+learning
+Introduction
+Recent studies have shown that neural networks can be used
+for solving NLP problems. However, models that were mostly
+considered for this task were convolutional neural networks
+and recurrent neural networks.
+Applying generative adversarial networks to the problems
+of NLP is considered to be a complicated task because GANs
+are only defined for real-valued data, and all NLP is based
+on discrete values like words, characters, or bytes.
+For example, if you output an image with a pixel
+value of 1.0, you can change that pixel value to
+1.0001 on the next step. If you output the word
+"penguin", you can’t change that to "penguin +
+.001" on the next step, because there is no such
+word as "penguin + .001". You have to go all the
+way from "penguin" to "ostrich". 1
+1 Ian
+Goodfellow’s answer to the related question on Reddit:
+https://www.reddit.com/r/MachineLearning/comments/40ldq6/
+generative_adversarial_networks_for_text/
+However, in their latest paper Fedus, Goodfellow, and
+Dai[FGD18] overcome this problem by using reinforcement
+learning to train the generator while the discriminator is
+still trained via maximum likelihood and stochastic gradient
+descent, and use it to fill the gaps in the text.
+However, this approach has not been used for abstract
+text summarization of scientific papers, yet.
+Problem statement
+The main hypothesis is that generative adversarial networks
+with reinforcement learning based generator, when applied
+to the problem of abstractive scientific text summarization,
+can provide better results than recent state-of-the-art ap-
+proaches.
+Related work
+Allahyari et al.[APA + 17] make a survey of the most success-
+ful text summarization techniques as of July 2017.
+This September Li et al. [LCB17] described their submis-
+sion to the sentiment analysis sub-task of ?Build It, Break It:
+The Language Edition (BIBI)? where they successfully apply
+generative approach to the problem of sentiment analysis.
+In their paper Generative Adversarial Network for Abstrac-
+tive Text Summarization Liu et al.[LLY + 17] built an adversar-
+ial model that achieved competitive ROUGE scores with the
+state-of-the-art methods on CNN/Daily Mail dataset. They
+compare the performance of their approach with three meth-
+ods, including the abstractive model, the pointer-generator
+coverage networks, and the abstractive deep reinforced model.
+In contrast Zhang et al.[GFC + 17] don’t use reinforcement
+learning but rather introduce TextGAN with an LSTM-based
+generator and kernelized discrepancy metric.
+Data collection and preparation
+arXiv provides a RESTful API 2 that allows us to search for
+papers from a specific category and inside a specific time
+range. The results are returned as an HTML page which can
+be easily parsed.
+Collecting paper IDs We started by making requests to
+arXiv and parsing the response to acquire unique identifiers
+of each paper. These are the fixed-length strings that look like
+2 https://arxiv.org/help/api/indexthis: 1801.01587. They allow us to access everything related
+to this paper (including its metadata and full text as PDF).
+We have only collected 2000 IDs from stat.ML category. We
+didn’t collect all the papers because of network restrictions
+of arXiv API, huge amount of space required to store them,
+and the time required to process them. We might create a
+larger database of papers till the second evaluations, but for
+now a sample of 2000 random papers from one category will
+be enough. training our model was able to generate meaningful titles
+for most abstracts. Take a look at this example:
+Collecting abstracts Having the list of paper IDs it was no
+trouble to make 2000 requests to the API and collect abstracts
+of these papers in plain text form. To get the full text of a
+paper we must parse its PDF, which can introduce noise and
+loose peces of text. So being able to collect abstracts directly
+from arXiv greatly simplifies the task. Actual summary great unk american popcorn
+Abstract this is great popcorn and i too have the whirly
+pop. the unk packs work wonderfully. i have not found it
+too salty or the packages leak. i have found the recent price
+of $35 too expensive and have purchased direct from great
+american for half the price.
+Predicted summary great popcorn!!
+It is not clear yet if we will be able to produce abstracts
+based on the whole text of an article. Such problems have
+very big feature space which might overcomplicate our task.
+So on the next stage of our project we will continue gener-
+ating titles from abstracts and try doing that with discrete
+GANs. If our experiments prove to be successful, we will try
+scaling up to full texts of papers in our dataset.
+Downloading PDF files The same way as we did it with
+abstracts, we were able to construct URLs using paper IDs,
+and donload each paper using wget tool.
+Extracting text from PDF Extracting text from PDF is a
+complicated task. We used a python binding to Apache Tika 3
+to parse the PDF files. The extracted text contained many
+special characters (noise) which had to be removed manually.
+Cleaning the text After removing special characters pro-
+duced by Tika, we also had to remove all mathematical ex-
+pressions because the can not be parsed into plain text and
+Tika just turns an expression like this y = f (x) into some-
+thing like y f x or ytx. More complex expressions (like sums,
+integrals etc.) produced much more noise, and it was very
+hard to identify and remove it. We wanted to remove ev-
+erething that is not a known English word. But that would
+filter out words like "GAN", "backprop" etc. So we filtered the
+words based on their length and frequence of vowels. That
+leaves some noise, but it shouldn’t cause too much damage
+to our model (at least less damage than would be caused by
+removing the word "GAN"). Hopefully, we will come up with
+a more ellegant solution by the time of second evaluations.
+As a result, we have created a database of 2000 papers. For
+each of these papers we store its name, a list of authors, full
+text without an abstract, and abstract stored in a separate
+column.
+Strength and weakness of the study
+GANs have proved to be the most successful when it comes
+to generative images, but their application to the problems
+of the text generation is not well studied. So we expect our
+research to introduce novel approaches and original ideas
+that may advance the field of natural language processing.
+However, there are high risks that this approach may not give
+good results at all, because there are still lots of issues about
+usage of neural networks with language data. The other
+possible weakness is a difficulty to compare the results with
+other papers, as there are not a lot of researches concerning
+this or relative subject. We are also currently looking for
+supervisors who might be interested in the following topic,
+so we could have a mentorship during the research.
+Baseline models
+As a baselin model we selected a seq2seq model with deep
+LSTM[SVL14] together with beam search and attention. At
+this point it is too hard to produce an abstract from the text
+of a paper, so we started with a simpler task of generating
+a title from the text of an abstract. We represented each
+absract as a numeric vector using word embedings and fed it
+to the model together with a corresponding title. After some

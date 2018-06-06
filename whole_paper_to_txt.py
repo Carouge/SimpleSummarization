@@ -2,7 +2,7 @@ import pandas as pd
 import sys, os
 
 file_dir = '/home/maria/Documents/Courses_UCU/ML/Course_work/data.csv'
-directory = './texts_txt/'
+directory = './texts_noabstract_txt/'
 
 if not os.path.exists(directory):
     os.makedirs(directory)
@@ -15,7 +15,7 @@ for i, paper in all_papers.iterrows():
         # print(abstract)
     with open(directory + paper['name'][:-4] + '.txt', "w") as f:
         text = paper['text']
-        paper = abstract + text
+        paper = text # + abstract    # if we need both abstract and text
         paper = [paper[i:i+50] for i in range(0, len(paper), 50)]
         f.write('\n'.join(paper))
 

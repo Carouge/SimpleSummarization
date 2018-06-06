@@ -17,7 +17,7 @@ filtered_words = tokenizer.tokenize(' '.join(filtered_words))
 result = ' '.join(filtered_words)
 reference = [['abstractive','scientific', 'text', 'summarization', 'using', 'GAN']]
 candidate = filtered_words
-print(filtered_words)
+print(' '.join(filtered_words))
 score = sentence_bleu(reference, candidate)
 
 #ROUGE-1 refers to the overlap of 1-gram (each word) between the system and reference summaries.

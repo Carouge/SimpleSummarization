@@ -3,27 +3,42 @@ from nltk.corpus import stopwords
 from nltk.tokenize import RegexpTokenizer
 from nltk.translate.bleu_score import sentence_bleu
 from rouge import Rouge
+import pandas as pd
 
 
-with open('./document.txt', "r") as f:
-    content = f.read()
-summarized = summarize(content, word_count=5)
-words = summarized.split(' ')
+def summarize_doc(content, abstract_ratio):
+    summarized = summarize(content, ratio=abstract_ratio)
+    words = summarized.split(' ')
+    tokenizer = RegexpTokenizer(r'\w+')
+    filtered_words = [word for word in words if word not in stopwords.words('english')]
+    filtered_words = tokenizer.tokenize(' '.join(filtered_words))
+    result = ' '.join(filtered_words)
+    return result, filtered_words
 
-tokenizer = RegexpTokenizer(r'\w+')
-filtered_words = [word for word in words if word not in stopwords.words('english')]
-filtered_words = tokenizer.tokenize(' '.join(filtered_words))
+dataset = pd.read_csv('./dataset.csv')
+testrank_res = pd.DataFrame(dataset['id'])
+testrank_res['BLUE'], testrank_res['ROUGE2_f'], testrank_res['ROUGE1_f'], testrank_res['ROUGE1_p'], testrank_res['ROUGE2_p'] = None, None, None, None, None
 
-result = ' '.join(filtered_words)
-reference = [['abstractive','scientific', 'text', 'summarization', 'using', 'GAN']]
-candidate = filtered_words
-print(' '.join(filtered_words))
-score = sentence_bleu(reference, candidate)
+for index, paper in dataset.iterrows():
+    try:
+        content = paper['text']
+        ratio = round(len(paper['abstract'])/len(content), 3)
+        sum_text, filtered_words = summarize_doc(content, ratio)
 
-#ROUGE-1 refers to the overlap of 1-gram (each word) between the system and reference summaries.
-#ROUGE-2 refers to the overlap of bigrams between the system and reference summaries.
+        abstract = paper['abstract'].split()
+        blue_score = sentence_bleu(abstract, filtered_words)
 
-rouge = Rouge()
-scores = rouge.get_scores(' '.join(candidate), ' '.join(reference[0]), avg=True)
-print("BLEU score: ", score)
-print( "Rouge scores: ", scores)
+        rouge = Rouge()
+        rouge_score = rouge.get_scores(' '.join(filtered_words), ' '.join(abstract))
+
+        testrank_res['BLUE'].iloc[index] = blue_score
+        testrank_res['ROUGE2_f'].iloc[index] = rouge_score[0]['rouge-2']['f']
+        testrank_res['ROUGE1_f'].iloc[index] = rouge_score[0]['rouge-1']['f']
+        testrank_res['ROUGE2_p'].iloc[index] = rouge_score[0]['rouge-2']['p']
+        testrank_res['ROUGE1_p'].iloc[index] = rouge_score[0]['rouge-1']['p']
+        print("Iteration: ", index)
+    except:
+        pass
+
+print(testrank_res.head(5))
+testrank_res.to_csv('testrank_scores.csv', index=False)

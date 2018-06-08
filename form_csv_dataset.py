@@ -27,9 +27,24 @@ for i, paper in abstracts_df.iterrows():
         text = ''.join(words)
 
         # Delete abstract
+        paper_abstract = paper_abstract.lower()
+        text = text.lower()
         abs_start = text.find(paper_abstract[:30])
         abs_end = text.find(paper_abstract[-30:])+ 28
         txt = text[:abs_start]+text[abs_end:]
+
+        # Get rid of ending (acknowledgments, reference)
+        ending = []
+        try:
+            wor = txt.split(' ')
+            for st in range(len(wor)):
+                # or 'references' in wor[st].lower() \
+                if st > len(wor)/1.5 and 'acknowledgments' in wor[st].lower() \
+                        or 'acknowledgements' in wor[st].lower() :
+                    ending.append(st)
+            txt = ' '.join(wor[:min(ending)])
+        except ValueError:
+            pass
 
         # Delete all non english signs
         text_words = re.sub("[^a-zA-Z .']", '', txt).split()
@@ -40,18 +55,10 @@ for i, paper in abstracts_df.iterrows():
             else:
                 text_words_clean.append(w)
 
-        # Get rid of ending (acknowledgments, reference)
-        ending = []
-        for st in range(len(text_words)):
-            if 'acknowledgments' in text_words[st].lower() or 'reference' in text_words[st].lower() \
-                    or 'acknowledgements' in text_words[st].lower():
-                ending.append(st)
-        text = ' '.join(text_words[:min(ending)])
-
-        abstracts_df['text'].iloc[i] = text
+        abstracts_df['text'].iloc[i] = ' '.join(text_words_clean)
         print("Iteration:", i, "  paper: ", paper_name)
     except:
-        abstracts_df.set_value(i, 'text', None)
+         abstracts_df.set_value(i, 'text', None)
 
 print(abstracts_df.shape)
 abstracts_df.to_csv('./dataset.csv', index=False)

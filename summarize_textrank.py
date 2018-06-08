@@ -16,8 +16,8 @@ def summarize_doc(content, len_words):
 
 dataset = pd.read_csv('./dataset.csv')
 testrank_res = pd.DataFrame(dataset['id'])
-testrank_res['BLUE'], testrank_res['ROUGE2_f'], testrank_res['ROUGE1_f'], testrank_res['ROUGE1_p'], testrank_res['ROUGE2_p'] = None, None, None, None, None
-testrank_res['BLUE_unfilter'], testrank_res['ROUGE2_f_unfilter'], testrank_res['ROUGE1_f_unfilter'], testrank_res['ROUGE1_p_unfilter'], testrank_res['ROUGE2_p_unfilter'] = None, None, None, None, None
+testrank_res['BLEU'], testrank_res['ROUGE2_f'], testrank_res['ROUGE1_f'], testrank_res['ROUGE1_p'], testrank_res['ROUGE2_p'] = None, None, None, None, None
+testrank_res['BLEU_unfilter'], testrank_res['ROUGE2_f_unfilter'], testrank_res['ROUGE1_f_unfilter'], testrank_res['ROUGE1_p_unfilter'], testrank_res['ROUGE2_p_unfilter'] = None, None, None, None, None
 testrank_res['Summary'] = None
 testrank_res['ROUGEl_p_unfilter'], testrank_res['ROUGEl_p'], testrank_res['ROUGEl_f'], testrank_res['ROUGEl_f_unfilter'] = None, None, None, None
 
@@ -36,25 +36,25 @@ for index, paper in dataset.iterrows():
         filtered_abstract = [word for word in abstract if word not in stopwords.words('english')]
         filtered_abstract = tokenizer.tokenize(' '.join(filtered_abstract))
 
-        blue_score = sentence_bleu(filtered_abstract, filtered_words)
+        bleu_score = sentence_bleu(filtered_abstract, filtered_words)
         rouge = Rouge()
         rouge_score = rouge.get_scores(' '.join(filtered_words), ' '.join(filtered_abstract))
 
         # print(len(sum_text), len(paper['abstract']), len(' '.join(filtered_abstract)), len(' '.join(filtered_words)))
         testrank_res['Summary'].iloc[index] = sum_text
-        testrank_res['BLUE'].iloc[index] = blue_score
+        testrank_res['BLEU'].iloc[index] = bleu_score
         testrank_res['ROUGE2_f'].iloc[index] = rouge_score[0]['rouge-2']['f']
         testrank_res['ROUGE1_f'].iloc[index] = rouge_score[0]['rouge-1']['f']
         testrank_res['ROUGE2_p'].iloc[index] = rouge_score[0]['rouge-2']['p']
         testrank_res['ROUGE1_p'].iloc[index] = rouge_score[0]['rouge-1']['p']
 
         # Score on not cleaned text
-        blue_score_unfilter = sentence_bleu(sum_text.split(' '), abstract)
+        bleu_score_unfilter = sentence_bleu(sum_text.split(' '), abstract)
         rouge_unfilter = Rouge()
         rouge_score_unfilter = rouge_unfilter.get_scores(sum_text, paper['abstract'])
 
         # print(len(sum_text), len(paper['abstract']), len(' '.join(filtered_abstract)), len(' '.join(filtered_words)))
-        testrank_res['BLUE_unfilter'].iloc[index] = blue_score_unfilter
+        testrank_res['BLEU_unfilter'].iloc[index] = bleu_score_unfilter
         testrank_res['ROUGE2_f_unfilter'].iloc[index] = rouge_score_unfilter[0]['rouge-2']['f']
         testrank_res['ROUGE1_f_unfilter'].iloc[index] = rouge_score_unfilter[0]['rouge-1']['f']
         testrank_res['ROUGE2_p_unfilter'].iloc[index] = rouge_score_unfilter[0]['rouge-2']['p']

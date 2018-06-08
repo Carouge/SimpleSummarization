@@ -23,6 +23,9 @@ testrank_res['Summary'] = None
 for index, paper in dataset.iterrows():
     try:
         content = paper['text']
+        if len(content) < len(paper['abstract']) * 3:
+            print("Too small text for paper", paper['id'], index)
+            raise ValueError
         # ratio = round(len(paper['abstract'])/len(content), 3)
         num_words = len(paper['abstract'].split(' '))
         sum_text, filtered_words = summarize_doc(content, num_words)
@@ -49,7 +52,7 @@ for index, paper in dataset.iterrows():
         rouge_unfilter = Rouge()
         rouge_score_unfilter = rouge_unfilter.get_scores(sum_text, paper['abstract'])
 
-        print(len(sum_text), len(paper['abstract']), len(' '.join(filtered_abstract)), len(' '.join(filtered_words)))
+        # print(len(sum_text), len(paper['abstract']), len(' '.join(filtered_abstract)), len(' '.join(filtered_words)))
 
         testrank_res['BLUE_unfilter'].iloc[index] = blue_score_unfilter
         testrank_res['ROUGE2_f_unfilter'].iloc[index] = rouge_score_unfilter[0]['rouge-2']['f']
@@ -62,4 +65,4 @@ for index, paper in dataset.iterrows():
         pass
 
 print(testrank_res.head(5))
-testrank_res.to_csv('testrank_scores.csv', index=False)
+testrank_res.to_csv('textrank_scores.csv', index=False)
